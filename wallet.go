@@ -18,11 +18,14 @@ var (
 )
 
 const (
+	version        string = "v0.2.1"
 	PREFIX_MAINNET string = "ckb"
 	PREFIX_TESTNET string = "ckt"
 )
 
 func main() {
+
+	putf("Ckb Wallet Version: %s\n\n", version)
 
 	var keyPair ecc.PrivateKey
 
@@ -55,8 +58,10 @@ func main() {
 	putf("Blake160: 0x%x\n", blake160)
 
 	testaddr := genCkbAddr(blake160, PREFIX_TESTNET)
-	putf("TestAddr: %s\n", testaddr)
+	mainnetaddr := genCkbAddr(blake160, PREFIX_MAINNET)
+	putf("TestAddr: %s\nMainnetAddr: %s\n", testaddr, mainnetaddr)
 
+	fmt.Scanln() // Enter Key to terminate the console screen
 }
 
 func genBlake160(pubKey string) []byte {
