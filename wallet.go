@@ -1,9 +1,11 @@
 package main
 
 import (
-	"crypto/rand"
+	crand "crypto/rand"
 	"encoding/hex"
 	"fmt"
+	"math/big"
+	"os"
 
 	"github.com/btcsuite/btcutil/bech32"
 	newblake2b "github.com/liushooter/blake2b"
@@ -21,11 +23,21 @@ const (
 )
 
 func main() {
-	seed := rand.Reader
 
-	keyPair, err := ecc.GenerateKey(seed)
-	if err != nil {
-		panic(err)
+	var keyPair ecc.PrivateKey
+
+	if len(os.Args) > 1 {
+		importSeed := os.Args[1]
+		bignum := new(big.Int)
+		bignum.SetString(importSeed, 16)
+		keyPair = *ecc.NewPrivateKey(bignum)
+	} else {
+		var err error
+		seed := crand.Reader
+		keyPair, err = ecc.GenerateKey(seed)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	rawPubKey := keyPair.PublicKey
@@ -43,7 +55,7 @@ func main() {
 	putf("Blake160: 0x%x\n", blake160)
 
 	testaddr := genCkbAddr(blake160, PREFIX_TESTNET)
-	putf("testAddr: %s\n", testaddr)
+	putf("TestAddr: %s\n", testaddr)
 
 }
 
