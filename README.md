@@ -1,7 +1,6 @@
 # Ckb Wallet
 gen ckb address
 
-
 # Go Build
 
 ```
@@ -15,4 +14,9 @@ GOARCH=amd64 GOOS=windows go build -ldflags "-w -s" -o ckb-wallet-win.exe wallet
 ## v0.2.1
 - Support windows10 system
 - Add Mainnet address
--  output the project version number
+- output the project version number
+
+## v0.3
+- use golang pkg `flag` refactoring project
+- add subcommand `-v` `-format` `-privkey` `-config`
+- Generate the miner config file ckb.toml

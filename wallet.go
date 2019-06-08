@@ -3,9 +3,13 @@ package main
 import (
 	crand "crypto/rand"
 	"encoding/hex"
+	"encoding/json"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"math/big"
 	"os"
+	"runtime"
 
 	"github.com/btcsuite/btcutil/bech32"
 	newblake2b "github.com/liushooter/blake2b"
@@ -18,21 +22,37 @@ var (
 )
 
 const (
-	version        string = "v0.2.1"
+	version        string = "v0.3"
 	PREFIX_MAINNET string = "ckb"
 	PREFIX_TESTNET string = "ckt"
 )
 
-func main() {
+type output struct {
+	Privkey     string
+	Pubkey      string
+	Blake160    string
+	TestnetAddr string
+	MainnetAddr string
+}
 
-	putf("Ckb Wallet Version: %s\n\n", version)
+func main() {
+	ver := flag.Bool("v", false, "show version and exit")
+	privkeyFlag := flag.String("privkey", "", "ehter privkey")
+	format := flag.String("format", "json", "output format")
+	config := flag.String("config", "0x9e3b3557f11b2b3532ce352bfe8017e9fd11d154c4c7f9b7aaaa1e621b539a08", "output miner config file")
+
+	flag.Parse()
+
+	if *ver {
+		putf("Ckb Wallet Version: %s\n\n", version)
+		os.Exit(0)
+	}
 
 	var keyPair ecc.PrivateKey
 
-	if len(os.Args) > 1 {
-		importSeed := os.Args[1]
+	if *privkeyFlag != "" {
 		bignum := new(big.Int)
-		bignum.SetString(importSeed, 16)
+		bignum.SetString(*privkeyFlag, 16)
 		keyPair = *ecc.NewPrivateKey(bignum)
 	} else {
 		var err error
@@ -51,17 +71,40 @@ func main() {
 	compressionPubKey := rawPubKey.ToBytes()
 	pubKey := byteString(compressionPubKey)
 
-	putf("Privkey: 0x%s\n", privKey)
-	putf("Pubkey: 0x%s\n", pubKey)
-
 	blake160 := genBlake160(pubKey)
-	putf("Blake160: 0x%x\n", blake160)
 
 	testaddr := genCkbAddr(blake160, PREFIX_TESTNET)
 	mainnetaddr := genCkbAddr(blake160, PREFIX_MAINNET)
-	putf("TestAddr: %s\nMainnetAddr: %s\n", testaddr, mainnetaddr)
 
-	fmt.Scanln() // Enter Key to terminate the console screen
+	if *format == "json" {
+		data := output{
+			Privkey:     fmt.Sprintf("0x%s", privKey),
+			Pubkey:      fmt.Sprintf("0x%s", pubKey),
+			Blake160:    fmt.Sprintf("0x%x", blake160),
+			TestnetAddr: testaddr,
+			MainnetAddr: mainnetaddr,
+		}
+
+		file, _ := json.MarshalIndent(data, "", "")
+		fmt.Printf("%s\n", file)
+
+	} else {
+		putf("Privkey: 0x%s\nPubkey: 0x%s\n", privKey, pubKey)
+		putf("Blake160: 0x%x\n", blake160)
+		putf("TestAddr: %s\nMainnetAddr: %s\n\n", testaddr, mainnetaddr)
+	}
+
+	if *config != "" {
+		ckbfile := fmt.Sprintf("\n[block_assembler]\ncode_hash = '%s'\nargs = ['%s']\n", *config, fmt.Sprintf("0x%x", blake160))
+		putf("\nAlready Generate the miner config file ckb.toml\n")
+		putf(ckbfile)
+
+		_ = ioutil.WriteFile("ckb.toml", []byte(ckbfile), 0644)
+	}
+
+	if runtime.GOOS == "windows" {
+		fmt.Scanln() // Enter Key to terminate the console screen
+	}
 }
 
 func genBlake160(pubKey string) []byte {
