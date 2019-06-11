@@ -21,6 +21,8 @@ shasum -a 256 ckb-wallet-win.exe
 
 # ChangeLog
 
+## v0.3.2
+
 ## v0.3.1
 - output `format` support csv
 

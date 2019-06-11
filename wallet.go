@@ -22,7 +22,7 @@ var (
 )
 
 const (
-	VERSION        string = "v0.3.1"
+	VERSION        string = "v0.3.2"
 	PREFIX_MAINNET string = "ckb"
 	PREFIX_TESTNET string = "ckt"
 )
@@ -40,11 +40,51 @@ func main() {
 	privkeyFlag := flag.String("privkey", "", "ehter privkey")
 	format := flag.String("format", "json", "output format")
 	config := flag.String("config", "0x9e3b3557f11b2b3532ce352bfe8017e9fd11d154c4c7f9b7aaaa1e621b539a08", "output miner config file")
+	loop := flag.Bool("loop", false, "")
+	num := flag.Int("num", 1, "loop num times")
 
 	flag.Parse()
 
 	if *ver {
 		putf("Ckb Wallet Version: %s\n\n", VERSION)
+		os.Exit(0)
+	}
+
+	if *loop {
+		if *num <= 0 || *num > 1001 {
+			putf("-num must 0 ≤ num ≤ 1000\n")
+			os.Exit(1001)
+		}
+
+		if *privkeyFlag != "" && *num != 1 {
+			putf("-privkey -num mutual\n")
+			os.Exit(1002)
+		}
+
+		for i := 0; i < *num; i++ {
+			seed := crand.Reader
+			keyPair, err := ecc.GenerateKey(seed)
+			if err != nil {
+				panic(err)
+			}
+
+			rawPubKey := keyPair.PublicKey
+
+			privBytes := keyPair.ToBytes()
+			privKey := byteString(privBytes)
+
+			compressionPubKey := rawPubKey.ToBytes()
+			pubKey := byteString(compressionPubKey)
+
+			blake160 := genBlake160(pubKey)
+
+			testaddr := genCkbAddr(blake160, PREFIX_TESTNET)
+			mainnetaddr := genCkbAddr(blake160, PREFIX_MAINNET)
+
+			putf("0x%s,0x%s,0x%x,%s,%s\n", privKey, pubKey, blake160, testaddr, mainnetaddr)
+
+		}
+
 		os.Exit(0)
 	}
 
