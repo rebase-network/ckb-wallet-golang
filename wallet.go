@@ -22,12 +22,12 @@ var (
 )
 
 const (
-	version        string = "v0.3"
+	VERSION        string = "v0.3.1"
 	PREFIX_MAINNET string = "ckb"
 	PREFIX_TESTNET string = "ckt"
 )
 
-type output struct {
+type Wallet struct {
 	Privkey     string
 	Pubkey      string
 	Blake160    string
@@ -44,7 +44,7 @@ func main() {
 	flag.Parse()
 
 	if *ver {
-		putf("Ckb Wallet Version: %s\n\n", version)
+		putf("Ckb Wallet Version: %s\n\n", VERSION)
 		os.Exit(0)
 	}
 
@@ -76,22 +76,23 @@ func main() {
 	testaddr := genCkbAddr(blake160, PREFIX_TESTNET)
 	mainnetaddr := genCkbAddr(blake160, PREFIX_MAINNET)
 
+	wallet := Wallet{
+		Privkey:     fmt.Sprintf("0x%s", privKey),
+		Pubkey:      fmt.Sprintf("0x%s", pubKey),
+		Blake160:    fmt.Sprintf("0x%x", blake160),
+		TestnetAddr: testaddr,
+		MainnetAddr: mainnetaddr,
+	}
+
 	if *format == "json" {
-		data := output{
-			Privkey:     fmt.Sprintf("0x%s", privKey),
-			Pubkey:      fmt.Sprintf("0x%s", pubKey),
-			Blake160:    fmt.Sprintf("0x%x", blake160),
-			TestnetAddr: testaddr,
-			MainnetAddr: mainnetaddr,
-		}
-
-		file, _ := json.MarshalIndent(data, "", "")
-		fmt.Printf("%s\n", file)
-
+		file, _ := json.MarshalIndent(wallet, "", "")
+		putf("%s\n", file)
+	} else if *format == "csv" {
+		putf("0x%s,0x%s,0x%x,%s,%s\n", privKey, pubKey, blake160, testaddr, mainnetaddr)
 	} else {
 		putf("Privkey: 0x%s\nPubkey: 0x%s\n", privKey, pubKey)
 		putf("Blake160: 0x%x\n", blake160)
-		putf("TestAddr: %s\nMainnetAddr: %s\n\n", testaddr, mainnetaddr)
+		putf("TestnetAddr: %s\nMainnetAddr: %s\n", testaddr, mainnetaddr)
 	}
 
 	if *config != "" {
