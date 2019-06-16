@@ -22,7 +22,7 @@ var (
 )
 
 const (
-	VERSION        string = "v0.3.2"
+	VERSION        string = "v0.3.3"
 	PREFIX_MAINNET string = "ckb"
 	PREFIX_TESTNET string = "ckt"
 )
@@ -39,7 +39,7 @@ func main() {
 	ver := flag.Bool("v", false, "show version and exit")
 	privkeyFlag := flag.String("privkey", "", "ehter privkey")
 	format := flag.String("format", "json", "output format")
-	config := flag.String("config", "0x9e3b3557f11b2b3532ce352bfe8017e9fd11d154c4c7f9b7aaaa1e621b539a08", "output miner config file")
+	config := flag.String("config", "0xf1951123466e4479842387a66fabfd6b65fc87fd84ae8e6cd3053edb27fff2fd", "output miner config file")
 	loop := flag.Bool("loop", false, "")
 	num := flag.Int("num", 1, "loop num times")
 
