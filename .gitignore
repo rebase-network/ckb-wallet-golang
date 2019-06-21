@@ -1,3 +1,4 @@
 bin
 .vscode/settings.json
 .DS_Store
+newckb.toml

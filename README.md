@@ -7,15 +7,15 @@ gen ckb address
 ./ckb-wallet-mac -v
 
 ./ckb-wallet-mac -format txt
-./ckb-wallet-mac -format csv
 
 ./ckb-wallet-mac -privkey 1234
-./ckb-wallet-mac -privkey 1234 -format txt
 
-./ckb-wallet-mac -config 0x5678
-./ckb-wallet-mac -config 0x5678 -format csv
+./ckb-wallet-mac -codehash 0x5678
 
-./ckb-wallet-mac -privkey 1234 -config 0x5678 -format txt
+./ckb-wallet-mac -privkey 1234 -codehash 0x5678 -format csv
+
+./ckb-wallet-mac -config ckb.toml -privkey 1234 -codehash 0x5678 -format json
+
 ```
 
 `./ckb-wallet-mac -format txt | grep Blake160 | grep -oE "[^:]+$"`
@@ -39,9 +39,11 @@ shasum -a 256 ckb-tool-win.exe
 
 ## ChangeLog
 
+### v0.4
+- generate newckb.toml
 
 ### v0.3.3
-- update code_hash
+- update codehash
 
 ### v0.3.2
 
