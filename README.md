@@ -24,20 +24,23 @@ gen ckb address
 ## Go Build
 
 ```
-GOARCH=amd64 GOOS=darwin  go build -ldflags "-w -s" -o ckb-wallet-mac wallet.go
-GOARCH=amd64 GOOS=linux   go build -ldflags "-w -s" -o ckb-wallet-linux wallet.go
-GOARCH=amd64 GOOS=windows go build -ldflags "-w -s" -o ckb-wallet-win.exe wallet.go
+flags="-X main.buildDate=`date -u '+%Y-%m-%d'` -X main.gitHash=`git rev-parse --short HEAD`"
+
+GOARCH=amd64 GOOS=darwin  go build -ldflags "$flags -w -s" -o ckb-wallet-mac wallet.go
+GOARCH=amd64 GOOS=linux   go build -ldflags "$flags -w -s" -o ckb-wallet-linux wallet.go
+GOARCH=amd64 GOOS=windows go build -ldflags "$flags -w -s" -o ckb-wallet-win.exe wallet.go
 ```
 
 ## Verifying the Release
 
 ```
-shasum -a 256 ckb-tool-linux
-shasum -a 256 ckb-tool-mac
-shasum -a 256 ckb-tool-win.exe
+shasum -a 256 ckb-wallet-linux ckb-wallet-mac ckb-wallet-win.exe
 ```
 
 ## ChangeLog
+
+### v0.4.1
+- update version display
 
 ### v0.4
 - generate newckb.toml

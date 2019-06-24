@@ -19,12 +19,14 @@ import (
 )
 
 var (
-	putf  = fmt.Printf
-	putln = fmt.Println
+	putf      = fmt.Printf
+	putln     = fmt.Println
+	gitHash   = ""
+	buildDate = ""
 )
 
 const (
-	VERSION        string = "v0.4"
+	VERSION        string = "v0.4.1"
 	PREFIX_MAINNET string = "ckb"
 	PREFIX_TESTNET string = "ckt"
 )
@@ -113,7 +115,7 @@ func main() {
 	flag.Parse()
 
 	if *ver {
-		putf("Ckb Wallet Version: %s\n\n", VERSION)
+		putf("Ckb Wallet Version: %s (%s %s)\n\n", VERSION, gitHash, buildDate)
 		os.Exit(0)
 	}
 
