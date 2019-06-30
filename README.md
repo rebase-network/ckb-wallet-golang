@@ -39,6 +39,12 @@ shasum -a 256 ckb-wallet-linux ckb-wallet-mac ckb-wallet-win.exe
 
 ## ChangeLog
 
+
+### v0.5.0
+- colorful output
+- update codehash
+- support new ckb.toml struct
+
 ### v0.4.1
 - update version display
 

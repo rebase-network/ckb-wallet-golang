@@ -14,28 +14,40 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/btcsuite/btcutil/bech32"
+	"github.com/gookit/color"
 	newblake2b "github.com/liushooter/blake2b"
 	"github.com/liushooter/ckb-wallet-golang/ecc"
 )
 
 var (
-	putf      = fmt.Printf
-	putln     = fmt.Println
+	putf  = fmt.Printf
+	putln = fmt.Println
+	puts  = fmt.Sprintf
+
 	gitHash   = ""
 	buildDate = ""
+
+	red   = color.FgRed.Render
+	green = color.FgGreen.Render
 )
 
 const (
-	VERSION        string = "v0.4.1"
-	PREFIX_MAINNET string = "ckb"
-	PREFIX_TESTNET string = "ckt"
+	VERSION        = "v0.5.0"
+	PREFIX_MAINNET = "ckb"
+	PREFIX_TESTNET = "ckt"
+
+	ErrColor = "\033[1;31m%s\033[0m"
 )
 
 type CkbConfig struct {
+	// https://xuri.me/toml-to-go/
+
 	DataDir string `toml:"data_dir"`
 
 	Chain struct {
-		Spec string `toml:"spec"`
+		Spec struct {
+			Bundled string `toml:"bundled"`
+		} `toml:"spec"`
 	} `toml:"chain"`
 
 	Logger struct {
@@ -60,6 +72,8 @@ type CkbConfig struct {
 		PingIntervalSecs            int           `toml:"ping_interval_secs"`
 		PingTimeoutSecs             int           `toml:"ping_timeout_secs"`
 		ConnectOutboundIntervalSecs int           `toml:"connect_outbound_interval_secs"`
+		Upnp                        bool          `toml:"upnp"`
+		DiscoveryLocalAddress       bool          `toml:"discovery_local_address"`
 	} `toml:"network"`
 
 	RPC struct {
@@ -90,6 +104,7 @@ type CkbConfig struct {
 	BlockAssembler struct {
 		CodeHash string   `toml:"code_hash"`
 		Args     []string `toml:"args"`
+		Data     string   `toml:"data"`
 	} `toml:"block_assembler"`
 }
 
@@ -106,8 +121,9 @@ func main() {
 	ver := flag.Bool("v", false, "show version and exit")
 	privkeyFlag := flag.String("privkey", "", "ehter privkey")
 	format := flag.String("format", "json", "output format")
-	codehash := flag.String("codehash", "0xf1951123466e4479842387a66fabfd6b65fc87fd84ae8e6cd3053edb27fff2fd", "output codehash")
-	config := flag.String("config", "ckb.toml", "output miner config file")
+	codehash := flag.String("codehash", "0x94334bdda40b69bae067d84937aa6bbccf8acd0df6626d4b9ac70d4612a11933", "output codehash")
+	config := flag.String("config", "ckb.toml", "output config file")
+	data := flag.String("data", "", "set ckb cellbase data")
 
 	loop := flag.Bool("loop", false, "")
 	num := flag.Int("num", 1, "loop num times")
@@ -121,12 +137,12 @@ func main() {
 
 	if *loop {
 		if *num <= 0 || *num > 1001 {
-			putf("-num must 0 ≤ num ≤ 1000\n")
+			putf(ErrColor, "-num must 0 ≤ num ≤ 1000\n")
 			os.Exit(1001)
 		}
 
 		if *privkeyFlag != "" && *num != 1 {
-			putf("-privkey -num mutual\n")
+			putf(ErrColor, "-privkey -num mutual\n")
 			os.Exit(1002)
 		}
 
@@ -205,19 +221,27 @@ func main() {
 	}
 
 	if *config != "" {
+
+		if !isExists(*config) {
+			putf(red("\n", *config, " File not exists\n"))
+			os.Exit(1003)
+		}
+
 		var ckbcfg CkbConfig
 		_, err := toml.DecodeFile(*config, &ckbcfg)
 		if err != nil {
 			panic(err)
 		}
 
-		ckbcfg.BlockAssembler.CodeHash = *codehash //
+		ckbcfg.BlockAssembler.CodeHash = *codehash // codehash
 		ckbcfg.BlockAssembler.Args = []string{fmt.Sprintf("0x%x", blake160)}
+		ckbcfg.BlockAssembler.Data = *data // cellbase data
+
 		ckbfile, _ := ckbcfg.toTOML()
 
 		_ = ioutil.WriteFile("newckb.toml", ckbfile.Bytes(), 0644)
 
-		putf("\nGenerate the miner config file newckb.toml\n")
+		putf(green("\nGenerate the config file: newckb.toml\n"))
 
 	}
 
@@ -271,4 +295,13 @@ func (t *CkbConfig) toTOML() (*bytes.Buffer, error) {
 		return nil, err
 	}
 	return b, nil
+}
+
+func isExists(name string) bool {
+	if _, err := os.Stat(name); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
 }
