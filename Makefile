@@ -1,5 +1,11 @@
 flags=-X main.buildDate=`date -u '+%Y-%m-%d'` -X main.gitHash=`git rev-parse --short HEAD`
 
+get:
+	go get -u -v ./...
+
+test:
+	@ go test -v wallet_test.go wallet.go
+
 build:
 	go build -ldflags "$(flags)" -o ckb-wallet wallet.go
 
