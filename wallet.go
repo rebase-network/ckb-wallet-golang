@@ -12,11 +12,12 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/rebase-network/ckb-wallet-golang/ecc"
+
 	"github.com/BurntSushi/toml"
 	"github.com/btcsuite/btcutil/bech32"
 	"github.com/gookit/color"
 	newblake2b "github.com/liushooter/blake2b"
-	"github.com/liushooter/ckb-wallet-golang/ecc"
 )
 
 var (
@@ -32,7 +33,7 @@ var (
 )
 
 const (
-	VERSION        = "v0.5.0"
+	VERSION        = "v0.5.1"
 	PREFIX_MAINNET = "ckb"
 	PREFIX_TESTNET = "ckt"
 
@@ -161,10 +162,10 @@ func main() {
 			compressionPubKey := rawPubKey.ToBytes()
 			pubKey := byteString(compressionPubKey)
 
-			blake160 := genBlake160(pubKey)
+			blake160 := genBlake160(compressionPubKey)
 
-			testaddr := genCkbAddr(blake160, PREFIX_TESTNET)
-			mainnetaddr := genCkbAddr(blake160, PREFIX_MAINNET)
+			testaddr := genCkbAddr(PREFIX_TESTNET, blake160)
+			mainnetaddr := genCkbAddr(PREFIX_MAINNET, blake160)
 
 			putf("0x%s,0x%s,0x%x,%s,%s\n", privKey, pubKey, blake160, testaddr, mainnetaddr)
 
@@ -196,15 +197,15 @@ func main() {
 	compressionPubKey := rawPubKey.ToBytes()
 	pubKey := byteString(compressionPubKey)
 
-	blake160 := genBlake160(pubKey)
+	blake160 := genBlake160(compressionPubKey)
 
-	testaddr := genCkbAddr(blake160, PREFIX_TESTNET)
-	mainnetaddr := genCkbAddr(blake160, PREFIX_MAINNET)
+	testaddr := genCkbAddr(PREFIX_TESTNET, blake160)
+	mainnetaddr := genCkbAddr(PREFIX_MAINNET, blake160)
 
 	wallet := Wallet{
-		Privkey:     fmt.Sprintf("0x%s", privKey),
-		Pubkey:      fmt.Sprintf("0x%s", pubKey),
-		Blake160:    fmt.Sprintf("0x%x", blake160),
+		Privkey:     puts("0x%s", privKey),
+		Pubkey:      puts("0x%s", pubKey),
+		Blake160:    puts("0x%x", blake160),
 		TestnetAddr: testaddr,
 		MainnetAddr: mainnetaddr,
 	}
@@ -250,18 +251,17 @@ func main() {
 	}
 }
 
-func genBlake160(pubKey string) []byte {
-	hexbin, _ := hex.DecodeString(pubKey)
+func genBlake160(pubKeyBin []byte) []byte {
 
-	ckbsum := newblake2b.CkbSum256(hexbin)
+	ckbsum := newblake2b.CkbSum256(pubKeyBin)
 	blake160 := ckbsum[:20]
 	return blake160
 }
 
-func genCkbAddr(blake160Addr []byte, prefix string) string {
+func genCkbAddr(prefix string, blake160Addr []byte) string {
 
 	typebin, _ := hex.DecodeString("01")
-	flag := []byte("P2PH")
+	flag, _ := hex.DecodeString("00")
 
 	payload := append(typebin, flag...)
 	payload = append(payload, blake160Addr...)
